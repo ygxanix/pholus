@@ -5,7 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
     plugins {
-        id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+        id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     }
 }
 
