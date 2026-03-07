@@ -1,0 +1,41 @@
+name: Build Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for Gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build OSS Release APK
+        run: ./gradlew assembleOssRelease
+
+      - name: Build Play Release APK
+        run: ./gradlew assemblePlayRelease
+
+      - name: Upload Release APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: PholusChat-Release-APKs
+          path: |
+            app/build/outputs/apk/oss/release/*.apk
+            app/build/outputs/apk/play/release/*.apk
