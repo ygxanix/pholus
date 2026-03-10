@@ -94,6 +94,10 @@ android {
     }
 }
 
+configurations.all {
+    exclude(group = "org.jetbrains", module = "annotations-java5")
+}
+
 dependencies {
     // Core Android
     implementation("androidx.core:core-ktx:1.13.1")
