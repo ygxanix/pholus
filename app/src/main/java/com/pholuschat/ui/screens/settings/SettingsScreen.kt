@@ -5,7 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,7 +63,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Theme") },
                     supportingContent = { Text(selectedTheme) },
-                    leadingContent = { Icon(Icons.Default.Palette, null) },
+                    leadingContent = { Icon(Icons.Filled.Palette, null) },
                     modifier = Modifier.clickable { darkModeExpanded = true }
                 )
                 DropdownMenu(
@@ -92,7 +98,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Dynamic Colors") },
                     supportingContent = { Text("Use Material You colors from wallpaper") },
-                    leadingContent = { Icon(Icons.Default.PaletteOutlined, null) },
+                    leadingContent = { Icon(Icons.Filled.Palette, null) },
                     trailingContent = {
                         Switch(
                             checked = dynamicColorsEnabled,
@@ -117,7 +123,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Streaming Responses") },
                     supportingContent = { Text("Show responses as they're generated") },
-                    leadingContent = { Icon(Icons.Default.Stream, null) },
+                    leadingContent = { Icon(Icons.Filled.Speed, null) },
                     trailingContent = {
                         Switch(
                             checked = streamingEnabled,
@@ -131,7 +137,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Code Highlighting") },
                     supportingContent = { Text("Syntax highlighting for code blocks") },
-                    leadingContent = { Icon(Icons.Default.Code, null) },
+                    leadingContent = { Icon(Icons.Filled.Code, null) },
                     trailingContent = {
                         Switch(
                             checked = codeHighlightingEnabled,
@@ -145,7 +151,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Show Model Name") },
                     supportingContent = { Text("Display model name below messages") },
-                    leadingContent = { Icon(Icons.Default.SmartToy, null) },
+                    leadingContent = { Icon(Icons.Filled.Settings, null) },
                     trailingContent = {
                         Switch(
                             checked = showModelName,
@@ -170,7 +176,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Max Tokens") },
                     supportingContent = { Text("Maximum tokens per response") },
-                    leadingContent = { Icon(Icons.Default.TextFields, null) },
+                    leadingContent = { Icon(Icons.Filled.TextFields, null) },
                     modifier = Modifier.clickable { /* Show dialog */ }
                 )
             }
@@ -190,7 +196,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("PholusChat") },
                     supportingContent = { Text("Version 1.0.0") },
-                    leadingContent = { Icon(Icons.Default.Info, null) }
+                    leadingContent = { Icon(Icons.Filled.Info, null) }
                 )
             }
 
@@ -198,7 +204,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("No Trackers") },
                     supportingContent = { Text("This app does not collect any data") },
-                    leadingContent = { Icon(Icons.Default.Security, null) }
+                    leadingContent = { Icon(Icons.Filled.Security, null) }
                 )
             }
         }

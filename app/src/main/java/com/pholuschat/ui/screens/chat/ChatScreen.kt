@@ -1,15 +1,50 @@
 package com.pholuschat.ui.screens.chat
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Menu
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material.icons.rounded.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,6 +52,7 @@ import com.pholuschat.domain.model.ChatMessage
 import com.pholuschat.domain.model.Conversation
 import com.pholuschat.domain.model.MessageRole
 import com.pholuschat.ui.components.MessageBubble
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +92,7 @@ fun ChatScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.AutoMirrored.Rounded.Add, contentDescription = null)
+                        Icon(Icons.Filled.Add, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
                         Text("New Chat")
                     }
@@ -98,7 +134,7 @@ fun ChatScreen(
 
                     ListItem(
                         headlineContent = { Text("Settings") },
-                        leadingContent = { Icon(Icons.Default.Settings, null) },
+                        leadingContent = { Icon(Icons.Filled.Settings, null) },
                         modifier = Modifier.clickable {
                             scope.launch { drawerState.close() }
                             onNavigateToSettings()
@@ -107,7 +143,7 @@ fun ChatScreen(
 
                     ListItem(
                         headlineContent = { Text("cURL Converter") },
-                        leadingContent = { Icon(Icons.Default.Code, null) },
+                        leadingContent = { Icon(Icons.Filled.Code, null) },
                         modifier = Modifier.clickable {
                             scope.launch { drawerState.close() }
                             onNavigateToCurl()
@@ -129,7 +165,7 @@ fun ChatScreen(
                         ) {
                             Text(selectedModel)
                             Icon(
-                                Icons.Default.KeyboardArrowDown,
+                                Icons.Filled.KeyboardArrowDown,
                                 contentDescription = "Select Model",
                                 modifier = Modifier.size(20.dp)
                             )
@@ -139,12 +175,12 @@ fun ChatScreen(
                         IconButton(onClick = {
                             scope.launch { drawerState.open() }
                         }) {
-                            Icon(Icons.AutoMirrored.Rounded.Menu, "Menu")
+                            Icon(Icons.Filled.Menu, "Menu")
                         }
                     },
                     actions = {
                         IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Default.Settings, "Settings")
+                            Icon(Icons.Filled.Settings, "Settings")
                         }
                     }
                 )
@@ -232,9 +268,9 @@ fun ChatScreen(
                             Icon(
                                 Icons.AutoMirrored.Rounded.Send,
                                 contentDescription = "Send",
-                                tint = if (inputText.isNotBlank()) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                tint = if (inputText.isNotBlank())
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -244,7 +280,3 @@ fun ChatScreen(
         }
     }
 }
-
-private fun Modifier.clickable(onClick: () -> Unit): Modifier = this.then(
-    androidx.compose.foundation.clickable { onClick() }
-)

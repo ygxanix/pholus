@@ -6,6 +6,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 
 object CurlParser {
     private val json = Json {
@@ -178,9 +180,12 @@ object CurlParser {
     private fun parseJsonElement(element: JsonElement): Any {
         return when (element) {
             is JsonPrimitive -> {
-                if (element.isString) element.content
-                else if (element.boolean != null) element.boolean
-                else element.content.toDoubleOrNull() ?: element.content
+                when {
+                    element.isString -> element.content
+                    element.booleanOrNull != null -> element.boolean
+                    element.content.toDoubleOrNull() != null -> element.content.toDouble()
+                    else -> element.content
+                }
             }
             is JsonObject -> element.mapValues { (_, v) -> parseJsonElement(v) }
             is kotlinx.serialization.json.JsonArray -> element.map { parseJsonElement(it) }

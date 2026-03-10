@@ -142,7 +142,7 @@ dependencies {
 
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:brotli:4.0.3")
+    implementation("com.squareup.okhttp3:okhttp-brotli:4.12.0")
 
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
@@ -156,11 +156,11 @@ dependencies {
     implementation("io.noties.markwon:ext-tables:4.6.2")
     implementation("io.noties.markwon:ext-strikethrough:4.6.2")
     implementation("io.noties.markwon:ext-tasklist:4.6.2")
-    implementation("io.noties.markwon:syntax:4.6.2")
+    implementation("io.noties.markwon:syntax-highlight:4.6.2")
     implementation("io.noties:prism4j:2.0.0")
     implementation("io.noties.markwon:html:4.6.2")
-    implementation("io.noties.markwon:simple:4.6.2")
-    kapt("io.noties.prism4j.bundler:2.0.0")
+    implementation("io.noties.markwon:simple-ext:4.6.2")
+    kapt("io.noties:prism4j-bundler:2.0.0")
 
     // Coil (Images)
     implementation("io.coil-kt:coil-compose:2.7.0")

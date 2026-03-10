@@ -3,14 +3,11 @@ package com.pholuschat.data.remote
 import com.pholuschat.domain.model.ApiConfig
 import com.pholuschat.domain.model.ApiType
 import com.pholuschat.domain.model.ChatMessage
-import com.pholuschat.domain.model.MessageRole
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -193,15 +190,23 @@ class ApiClient @Inject constructor() {
             return template
         }
 
-        return Json.encodeToString(body.mapValues { (_, value) ->
-            when (value) {
-                is String -> JsonPrimitive(value)
-                is Number -> JsonPrimitive(value)
-                is Boolean -> JsonPrimitive(value)
-                is List<*> -> JsonArray(value.map { JsonPrimitive(it.toString()) })
-                else -> JsonPrimitive(value.toString())
-            }
-        })
+        return Json.encodeToString(JsonObject(body.mapValues { (_, value) ->
+            toJsonElement(value)
+        }))
+    }
+
+    private fun toJsonElement(value: Any?): kotlinx.serialization.json.JsonElement {
+        return when (value) {
+            null -> kotlinx.serialization.json.JsonNull
+            is String -> JsonPrimitive(value)
+            is Number -> JsonPrimitive(value)
+            is Boolean -> JsonPrimitive(value)
+            is Map<*, *> -> JsonObject(value.entries.associate { (k, v) ->
+                k.toString() to toJsonElement(v)
+            })
+            is List<*> -> JsonArray(value.map { toJsonElement(it) })
+            else -> JsonPrimitive(value.toString())
+        }
     }
 
     private fun buildEndpoint(config: ApiConfig, model: String): String {
