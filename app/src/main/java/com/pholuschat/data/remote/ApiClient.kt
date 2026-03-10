@@ -12,6 +12,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
@@ -106,28 +107,26 @@ class ApiClient @Inject constructor() {
 
         try {
             if (stream) {
-                client.preparePost(endpoint)
-                    .apply {
-                        config.apiKey?.let { apiKey ->
-                            header("Authorization", "Bearer $apiKey")
-                        }
+                client.preparePost(endpoint) {
+                    config.apiKey?.let { apiKey ->
+                        header("Authorization", "Bearer $apiKey")
                     }
-                    .setBody(requestBody)
-                    .execute { response ->
-                        val channel = response.bodyAsChannel()
-                        while (!channel.isClosedForRead) {
-                            val line = channel.readUTF8Line()
-                            if (line != null && line.startsWith("data: ")) {
-                                val data = line.removePrefix("data: ").trim()
-                                if (data == "[DONE]") {
-                                    emit(ApiResponse.Done)
-                                } else {
-                                    val parsed = parseStreamingResponse(data)
-                                    parsed?.let { emit(ApiResponse.Content(it)) }
-                                }
+                    setBody(requestBody)
+                }.execute { response ->
+                    val channel = response.bodyAsChannel()
+                    while (!channel.isClosedForRead) {
+                        val line = channel.readUTF8Line()
+                        if (line != null && line.startsWith("data: ")) {
+                            val data = line.removePrefix("data: ").trim()
+                            if (data == "[DONE]") {
+                                emit(ApiResponse.Done)
+                            } else {
+                                val parsed = parseStreamingResponse(data)
+                                parsed?.let { emit(ApiResponse.Content(it)) }
                             }
                         }
                     }
+                }
             } else {
                 val response = client.post(endpoint) {
                     config.apiKey?.let { apiKey ->
@@ -190,7 +189,7 @@ class ApiClient @Inject constructor() {
             return template
         }
 
-        return Json.encodeToString(JsonObject(body.mapValues { (_, value) ->
+        return Json.encodeToString(JsonObject.serializer(), JsonObject(body.mapValues { (_, value) ->
             toJsonElement(value)
         }))
     }

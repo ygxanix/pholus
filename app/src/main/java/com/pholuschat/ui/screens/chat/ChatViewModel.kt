@@ -6,9 +6,11 @@ import com.pholuschat.domain.model.ChatMessage
 import com.pholuschat.domain.model.MessageRole
 import com.pholuschat.domain.repository.ApiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.pholuschat.domain.model.Model
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -59,18 +61,32 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // In a true implementation, we'd get the current ApiConfig
-                // For now, we simulate fetching the config
-                val configs = apiRepository.getApiConfigs()
+                // Collect the first emission from the Flow
+                val configs = apiRepository.getApiConfigs().firstOrNull() ?: emptyList()
                 if (configs.isEmpty()) {
                     addErrorMessage("Error: No API configuration found. Please add one in settings.")
                     return@launch
                 }
                 
-                // We just use the first one for demonstration
                 val config = configs.first()
 
-                val result = apiRepository.sendMessage(config, _uiState.value.messages)
+                // Get models and find one matching the config
+                val models = apiRepository.getModels().firstOrNull() ?: emptyList()
+                val model = models.firstOrNull { it.apiConfigId == config.id }
+                    ?: Model(name = config.defaultModel, apiConfigId = config.id)
+
+                // Build streamed response content
+                val responseBuilder = StringBuilder()
+
+                val result = apiRepository.sendMessage(
+                    apiConfig = config,
+                    model = model,
+                    messages = _uiState.value.messages,
+                    systemPrompt = null,
+                    temperature = 0.7f,
+                    maxTokens = null,
+                    onChunk = { chunk -> responseBuilder.append(chunk) }
+                )
                 
                 result.fold(
                     onSuccess = { responseText ->
@@ -80,7 +96,7 @@ class ChatViewModel @Inject constructor(
                             role = MessageRole.ASSISTANT,
                             content = responseText,
                             timestamp = System.currentTimeMillis(),
-                            modelUsed = config.name
+                            modelUsed = model.name
                         )
                         _uiState.update { it.copy(messages = it.messages + aiMessage) }
                     },
@@ -99,6 +115,10 @@ class ChatViewModel @Inject constructor(
     // Allows replying to a specific message
     fun setReplyTo(replyToMessageId: String) {
          // Optionally scroll to input, or cite the message in text
+    }
+
+    fun clearMessages() {
+        _uiState.update { it.copy(messages = emptyList()) }
     }
 
     private fun addErrorMessage(errorMessage: String) {

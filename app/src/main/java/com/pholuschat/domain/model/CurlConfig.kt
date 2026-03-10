@@ -167,7 +167,7 @@ data class CurlConfig(
             is Number -> value.toString()
             is Boolean -> value.toString()
             is List<*> -> "[${value.joinToString(",") { formatJsonValue(it ?: "null") }}]"
-            is Map<*, *> -> "{${value.entries.joinToString(",") { "\"${it.key}\": ${formatJsonValue(it.value)}" }}}"
+            is Map<*, *> -> "{${value.entries.joinToString(",") { "\"${it.key}\": ${formatJsonValue(it.value ?: "null")}" }}}"
             else -> "\"$value\""
         }
     }

@@ -55,7 +55,6 @@ import com.pholuschat.ui.components.MessageBubble
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pholuschat.ui.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +92,7 @@ fun ChatScreen(
 
                     FilledTonalButton(
                         onClick = {
-                            messages = emptyList()
+                            viewModel.clearMessages()
                             scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -208,10 +207,7 @@ fun ChatScreen(
                         MessageBubble(
                             message = message,
                             onReply = { repliedMessage ->
-                                messages = messages.map {
-                                    if (it.id == message.id) it.copy(repliedToId = repliedMessage.id)
-                                    else it
-                                }
+                                viewModel.setReplyTo(repliedMessage.id)
                             }
                         )
                     }
