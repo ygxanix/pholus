@@ -59,18 +59,33 @@ import com.pholuschat.data.util.CurlParser
 import com.pholuschat.domain.model.ApiType
 import com.pholuschat.domain.model.CurlConfig
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurlConverterScreen(
     onNavigateBack: () -> Unit,
-    onImportConfig: (CurlConfig) -> Unit = {}
+    onImportConfig: (CurlConfig) -> Unit = {},
+    viewModel: CurlConverterViewModel = hiltViewModel()
 ) {
-    var curlInput by remember { mutableStateOf("") }
-    var parsedConfig by remember { mutableStateOf<CurlConfig?>(null) }
-    var showPythonCode by remember { mutableStateOf(false) }
-    var showAdvancedParams by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isValidating by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    val curlInput = uiState.curlInput
+    val parsedConfig = uiState.parsedConfig
+    val showPythonCode = uiState.showPythonCode
+    val showAdvancedParams = uiState.showAdvancedParams
+    val errorMessage = uiState.errorMessage
+    val isValidating = uiState.isValidating
+    val isSaved = uiState.isSaved
+
+    // Trigger onImportConfig callback and navigate back when saved successfully
+    LaunchedEffect(isSaved) {
+        if (isSaved) {
+            parsedConfig?.let { onImportConfig(it) }
+            onNavigateBack()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -83,9 +98,7 @@ fun CurlConverterScreen(
                 },
                 actions = {
                     if (parsedConfig != null) {
-                        IconButton(onClick = {
-                            parsedConfig?.let { onImportConfig(it) }
-                        }) {
+                        IconButton(onClick = { viewModel.saveConfig() }) {
                             Icon(Icons.Filled.Save, "Save")
                         }
                     }
@@ -112,11 +125,7 @@ fun CurlConverterScreen(
             item {
                 OutlinedTextField(
                     value = curlInput,
-                    onValueChange = {
-                        curlInput = it
-                        errorMessage = null
-                        parsedConfig = null
-                    },
+                    onValueChange = { viewModel.onInputChanged(it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
@@ -134,25 +143,7 @@ fun CurlConverterScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = {
-                            isValidating = true
-                            val validation = CurlParser.validateCurl(curlInput)
-                            when (validation) {
-                                is CurlParser.ValidationResult.Error -> {
-                                    errorMessage = validation.message
-                                    isValidating = false
-                                }
-                                is CurlParser.ValidationResult.Success -> {
-                                    try {
-                                        parsedConfig = CurlParser.parse(curlInput)
-                                        errorMessage = null
-                                    } catch (e: Exception) {
-                                        errorMessage = "Failed to parse: ${e.message}"
-                                    }
-                                    isValidating = false
-                                }
-                            }
-                        },
+                        onClick = { viewModel.parseCommand() },
                         modifier = Modifier.weight(1f),
                         enabled = curlInput.isNotBlank() && !isValidating
                     ) {
@@ -170,7 +161,7 @@ fun CurlConverterScreen(
 
                     if (parsedConfig != null) {
                         OutlinedButton(
-                            onClick = { showPythonCode = !showPythonCode },
+                            onClick = { viewModel.togglePythonCode(!showPythonCode) },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Filled.Code, null)
@@ -331,7 +322,7 @@ fun CurlConverterScreen(
 
                 item {
                     TextButton(
-                        onClick = { showAdvancedParams = !showAdvancedParams }
+                        onClick = { viewModel.toggleAdvancedParams(!showAdvancedParams) }
                     ) {
                         Icon(
                             if (showAdvancedParams) Icons.Filled.ExpandLess
@@ -462,7 +453,7 @@ fun CurlConverterScreen(
 
                 item {
                     Button(
-                        onClick = { onImportConfig(config) },
+                        onClick = { viewModel.saveConfig() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Filled.Add, null)

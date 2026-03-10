@@ -18,18 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    var selectedTheme by remember { mutableStateOf("System") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
     var darkModeExpanded by remember { mutableStateOf(false) }
-    var dynamicColorsEnabled by remember { mutableStateOf(true) }
-    var streamingEnabled by remember { mutableStateOf(true) }
-    var codeHighlightingEnabled by remember { mutableStateOf(true) }
-    var showModelName by remember { mutableStateOf(true) }
-    var maxTokens by remember { mutableStateOf("4096") }
 
     Scaffold(
         topBar = {
@@ -62,7 +62,7 @@ fun SettingsScreen(
             item {
                 ListItem(
                     headlineContent = { Text("Theme") },
-                    supportingContent = { Text(selectedTheme) },
+                    supportingContent = { Text(uiState.selectedTheme) },
                     leadingContent = { Icon(Icons.Filled.Palette, null) },
                     modifier = Modifier.clickable { darkModeExpanded = true }
                 )
@@ -73,21 +73,21 @@ fun SettingsScreen(
                     DropdownMenuItem(
                         text = { Text("System") },
                         onClick = {
-                            selectedTheme = "System"
+                            viewModel.setTheme("System")
                             darkModeExpanded = false
                         }
                     )
                     DropdownMenuItem(
                         text = { Text("Light") },
                         onClick = {
-                            selectedTheme = "Light"
+                            viewModel.setTheme("Light")
                             darkModeExpanded = false
                         }
                     )
                     DropdownMenuItem(
                         text = { Text("Dark") },
                         onClick = {
-                            selectedTheme = "Dark"
+                            viewModel.setTheme("Dark")
                             darkModeExpanded = false
                         }
                     )
@@ -101,8 +101,8 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Filled.Palette, null) },
                     trailingContent = {
                         Switch(
-                            checked = dynamicColorsEnabled,
-                            onCheckedChange = { dynamicColorsEnabled = it }
+                            checked = uiState.dynamicColorsEnabled,
+                            onCheckedChange = { viewModel.toggleDynamicColors(it) }
                         )
                     }
                 )
@@ -126,8 +126,8 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Filled.Speed, null) },
                     trailingContent = {
                         Switch(
-                            checked = streamingEnabled,
-                            onCheckedChange = { streamingEnabled = it }
+                            checked = uiState.streamingEnabled,
+                            onCheckedChange = { viewModel.toggleStreaming(it) }
                         )
                     }
                 )
@@ -140,8 +140,8 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Filled.Code, null) },
                     trailingContent = {
                         Switch(
-                            checked = codeHighlightingEnabled,
-                            onCheckedChange = { codeHighlightingEnabled = it }
+                            checked = uiState.codeHighlightingEnabled,
+                            onCheckedChange = { viewModel.toggleCodeHighlighting(it) }
                         )
                     }
                 )
@@ -154,8 +154,8 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Filled.Settings, null) },
                     trailingContent = {
                         Switch(
-                            checked = showModelName,
-                            onCheckedChange = { showModelName = it }
+                            checked = uiState.showModelName,
+                            onCheckedChange = { viewModel.toggleShowModelName(it) }
                         )
                     }
                 )

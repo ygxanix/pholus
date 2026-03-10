@@ -53,21 +53,27 @@ import com.pholuschat.domain.model.Conversation
 import com.pholuschat.domain.model.MessageRole
 import com.pholuschat.ui.components.MessageBubble
 import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pholuschat.ui.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    conversationId: String?,
+    conversationId: String? = null,
     onNavigateToSettings: () -> Unit,
-    onNavigateToCurl: () -> Unit
+    onNavigateToCurl: () -> Unit,
+    viewModel: ChatViewModel = hiltViewModel()
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
-    var inputText by remember { mutableStateOf("") }
-    var selectedModel by remember { mutableStateOf("GPT-4o") }
-    var isLoading by remember { mutableStateOf(false) }
+    // Collect UI state from the ViewModel to prevent data loss on rotation
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val messages = uiState.messages
+    val inputText = uiState.inputText
+    val isLoading = uiState.isLoading
+    val selectedModel = uiState.selectedModelName
     var conversations by remember { mutableStateOf(listOf<Conversation>()) }
 
     ModalNavigationDrawer(
@@ -240,7 +246,7 @@ fun ChatScreen(
                     ) {
                         OutlinedTextField(
                             value = inputText,
-                            onValueChange = { inputText = it },
+                            onValueChange = { viewModel.onInputTextChanged(it) },
                             modifier = Modifier.weight(1f),
                             placeholder = { Text("Message...") },
                             maxLines = 5
@@ -249,20 +255,7 @@ fun ChatScreen(
                         Spacer(Modifier.width(8.dp))
 
                         IconButton(
-                            onClick = {
-                                if (inputText.isNotBlank()) {
-                                    val userMessage = ChatMessage(
-                                        chatId = conversationId ?: "default",
-                                        role = MessageRole.USER,
-                                        content = inputText,
-                                        modelUsed = selectedModel
-                                    )
-                                    messages = messages + userMessage
-                                    inputText = ""
-                                    isLoading = true
-                                    // TODO: Send to API
-                                }
-                            },
+                            onClick = { viewModel.sendMessage() },
                             enabled = inputText.isNotBlank() && !isLoading
                         ) {
                             Icon(
