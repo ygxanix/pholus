@@ -50,8 +50,12 @@ jobs:
       - name: Rename signed APKs
         run: |
           cd app/build/outputs/apk/oss/release
+          echo "=== Files in release directory ==="
+          ls -la
+          echo "=== Renaming signed APKs ==="
+          COUNT=0
           for apk in *-signed.apk; do
-            # Extract architecture from filename
+            [ -f "$apk" ] || continue
             if [[ "$apk" == *"arm64-v8a"* ]]; then
               mv "$apk" "Pholus-${VERSION}-arm64-v8a.apk"
             elif [[ "$apk" == *"armeabi-v7a"* ]]; then
@@ -60,16 +64,23 @@ jobs:
               mv "$apk" "Pholus-${VERSION}-x86_64.apk"
             elif [[ "$apk" == *"universal"* ]]; then
               mv "$apk" "Pholus-${VERSION}-universal.apk"
+            else
+              mv "$apk" "Pholus-${VERSION}-${COUNT}.apk"
             fi
+            COUNT=$((COUNT + 1))
           done
+          echo "=== Renamed APKs ==="
+          ls -la Pholus-*.apk 2>/dev/null || echo "WARNING: No Pholus APKs found"
           # Move renamed APKs to workspace root for easy access
-          mv Pholus-*.apk $GITHUB_WORKSPACE/
+          mv Pholus-*.apk $GITHUB_WORKSPACE/ 2>/dev/null || true
 
       - name: Upload signed APKs
         uses: actions/upload-artifact@v4
         with:
           name: Pholus-Signed-APKs
-          path: Pholus-*.apk
+          path: |
+            Pholus-*.apk
+            app/build/outputs/apk/oss/release/Pholus-*.apk
 
   create_release:
     runs-on: ubuntu-latest
@@ -87,10 +98,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Pholus-Signed-APKs
-          merge-multiple: true
 
       - name: Display downloaded APKs
-        run: ls -la Pholus-*.apk
+        run: |
+          echo "=== All files ==="
+          ls -la
+          echo "=== APK files ==="
+          find . -name '*.apk' -type f
 
       - name: Set version from tag
         run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV

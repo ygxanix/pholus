@@ -20,8 +20,8 @@
 }
 
 # Keep domain models
--keep class com.pholuschat.domain.model.** { *; }
--keep class com.pholuschat.data.** { *; }
+-keep class com.pholus.domain.model.** { *; }
+-keep class com.pholus.data.** { *; }
 
 # Ktor
 -keep class io.ktor.** { *; }
@@ -72,3 +72,7 @@
 # Compose
 -keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
+
+# SLF4J - StaticLoggerBinder is optional
+-dontwarn org.slf4j.**
+-keep class org.slf4j.** { *; }
