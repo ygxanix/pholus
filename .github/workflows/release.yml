@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Release
 
 on:
   push:
@@ -7,12 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-release:
+  build_and_sign:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog generation
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -26,16 +28,116 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x ./gradlew
 
-      - name: Build OSS Release APK
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Build OSS Release APKs
         run: ./gradlew assembleOssRelease
 
-      - name: Build Play Release APK
-        run: ./gradlew assemblePlayRelease
+      - name: Sign APKs
+        uses: iota9star/sign-android-release@v1.0.5
+        id: sign_apk
+        with:
+          releaseDirectory: app/build/outputs/apk/oss/release
+          fileRex: .*apk
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASS }}
+          keyPassword: ${{ secrets.KEY_STORE_PASS }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
 
-      - name: Upload Release APKs
+      - name: Rename signed APKs
+        run: |
+          cd app/build/outputs/apk/oss/release
+          for apk in *-signed.apk; do
+            # Extract architecture from filename
+            if [[ "$apk" == *"arm64-v8a"* ]]; then
+              mv "$apk" "Pholus-${VERSION}-arm64-v8a.apk"
+            elif [[ "$apk" == *"armeabi-v7a"* ]]; then
+              mv "$apk" "Pholus-${VERSION}-armeabi-v7a.apk"
+            elif [[ "$apk" == *"x86_64"* ]]; then
+              mv "$apk" "Pholus-${VERSION}-x86_64.apk"
+            elif [[ "$apk" == *"universal"* ]]; then
+              mv "$apk" "Pholus-${VERSION}-universal.apk"
+            fi
+          done
+          # Move renamed APKs to workspace root for easy access
+          mv Pholus-*.apk $GITHUB_WORKSPACE/
+
+      - name: Upload signed APKs
         uses: actions/upload-artifact@v4
         with:
-          name: PholusChat-Release-APKs
-          path: |
-            app/build/outputs/apk/oss/release/*.apk
-            app/build/outputs/apk/play/release/*.apk
+          name: Pholus-Signed-APKs
+          path: Pholus-*.apk
+
+  create_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: build_and_sign
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download signed APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: Pholus-Signed-APKs
+          merge-multiple: true
+
+      - name: Display downloaded APKs
+        run: ls -la Pholus-*.apk
+
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Detect pre-release
+        run: |
+          if [[ "$VERSION" == *-* ]]; then
+            echo "PRE_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "PRE_RELEASE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # First release - use all commits
+            COMMITS=$(git log --pretty=format:"* %s" --no-merges -20)
+            COMPARE_TEXT=""
+          else
+            # Get commits between tags
+            COMMITS=$(git log --pretty=format:"* %s" --no-merges ${PREV_TAG}..HEAD)
+            COMPARE_TEXT="**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${VERSION}"
+          fi
+
+          # Write to file to handle multiline
+          {
+            echo "## What's Changed"
+            echo ""
+            echo "$COMMITS"
+            echo ""
+            if [ -n "$COMPARE_TEXT" ]; then
+              echo "$COMPARE_TEXT"
+            fi
+          } > release_notes.md
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "Pholus-*.apk"
+          bodyFile: release_notes.md
+          prerelease: ${{ env.PRE_RELEASE }}
+          name: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          makeLatest: true

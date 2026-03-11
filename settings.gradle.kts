@@ -18,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PholusChat"
+rootProject.name = "Pholus"
 include(":app")

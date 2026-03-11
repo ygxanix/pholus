@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pholuschat"
+    namespace = "com.pholus"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.pholuschat"
+        applicationId = "com.pholus"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -24,7 +24,7 @@ android {
         }
 
         // Archive name for APKs
-        setProperty("archivesBaseName", "PholusChat-$versionName")
+        setProperty("archivesBaseName", "Pholus-$versionName")
     }
 
     // Build variants (like ImageToolbox)
