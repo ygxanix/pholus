@@ -30,5 +30,4 @@ jobs:
       - name: Build OSS Debug APK
         run: ./gradlew assembleOssDebug
 
-      - name: Build Play Debug APK
-        run: ./gradlew assemblePlayDebug
+
