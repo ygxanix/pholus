@@ -13,9 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
-
-
 chatwith*
+chatwith
+PHOLUSCHAT_PROGRESS_SUMMARY.md
+cleanup.sh
 *agents.md
 AGENTS.md
 chatwiththeopencodeminimax.md
